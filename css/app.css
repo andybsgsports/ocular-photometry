@@ -338,6 +338,29 @@ h2 {
   padding-top: 18px;
   max-width: 68ch;
 }
+.fine-print + .fine-print { border-top: none; padding-top: 10px; }
+
+a { color: var(--oiii); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--paper); }
+a:focus-visible { outline: 2px solid var(--phosphor); outline-offset: 2px; }
+a.crumb { color: inherit; text-decoration: none; }
+a.crumb:hover { text-decoration: underline; }
+
+.notes h2 + .lede { margin-bottom: 14px; }
+.notes .glossary + h2 { margin-top: 28px; }
+
+.record {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--paper);
+}
+code { font-family: 'JetBrains Mono', monospace; font-size: .92em; }
 
 @media (max-width: 560px) {
   :root { --eye-scale: 1.1; }

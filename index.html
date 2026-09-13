@@ -6,9 +6,8 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Reads eye fatigue from your webcam and renders it as a living nebula. Everything runs in the browser; nothing leaves the device.">
   <title>Ocular Photometry</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; worker-src 'self' blob:; img-src 'self' blob: data:; media-src 'self' blob:; style-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body data-phase="idle">
@@ -103,6 +102,7 @@
       instrument — eyelid behaviour is an indirect, noisy proxy for how tired you are, and none of
       this is medical guidance.
     </p>
+    <p class="fine-print"><a href="privacy.html">Privacy — exactly what is recorded and where it lives</a> · <a href="https://github.com/andybsgsports/ocular-photometry">Source</a></p>
   </section>
 
 </div>

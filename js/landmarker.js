@@ -1,8 +1,10 @@
+// Runtime and model are served from this site (see vendor/mediapipe/README.md),
+// so the page never loads code from a third-party host.
 export const MP_VERSION = '1.0.1';
-export const CDN_BASE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSION}`;
-export const WASM_BASE = `${CDN_BASE}/wasm`;
-export const BUNDLE_URL = `${CDN_BASE}/vision_bundle.mjs`;
-export const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+const VENDOR = new URL('../vendor/mediapipe/', import.meta.url);
+export const WASM_BASE = new URL('wasm', VENDOR).href;
+export const BUNDLE_URL = new URL('vision_bundle.mjs', VENDOR).href;
+export const MODEL_URL = new URL('face_landmarker.task', VENDOR).href;
 
 export async function createLandmarker({ onStage = () => {} } = {}) {
   onStage('Loading vision runtime…');
