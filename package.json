@@ -1,0 +1,10 @@
+{
+  "name": "ocular-photometry",
+  "private": true,
+  "type": "module",
+  "description": "Reads eye fatigue from the webcam and renders it as a living nebula — on-device, nothing leaves the browser.",
+  "scripts": {
+    "test": "node --test",
+    "serve": "python3 -m http.server 8000"
+  }
+}

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Reads eye fatigue from your webcam and renders it as a living nebula. Everything runs in the browser; nothing leaves the device.">
+  <title>Ocular Photometry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body data-phase="idle">
+<div class="sheet">
+
+  <header class="head">
+    <div class="kicker">Ocular Photometry — live reading</div>
+    <h1>The eye reads like a sky</h1>
+    <p class="lede">
+      Your camera watches how your eyelids behave — how long blinks last, how often they come,
+      how low the lids sit between them — and renders the result as a small sky: bright and
+      structured when rested, collapsing toward a dark core when the eyes are running on empty.
+      It all happens in this tab. No video is stored or sent anywhere.
+    </p>
+  </header>
+
+  <main class="lock">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+
+    <div class="statusbar">
+      <span id="clock" class="clock">--:--</span>
+      <span class="badges">
+        <span id="irBadge" class="badge ir" hidden><i></i>Camera live</span>
+        <span id="phaseBadge" class="badge">idle</span>
+      </span>
+    </div>
+
+    <div class="eye-stage">
+      <div class="eye-shell" id="eyeShell">
+        <svg class="eye-rim" viewBox="0 0 220 140" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M4,70 C4,32 60,6 110,6 C160,6 216,32 216,70 C216,108 160,134 110,134 C60,134 4,108 4,70 Z" />
+        </svg>
+        <div class="eye-clip">
+          <canvas id="nebula" aria-label="Nebula rendering of the current reading"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="readout" aria-live="polite">
+      <div class="energy"><span id="energyNum">—</span><span class="of">/ 100</span></div>
+      <div class="state-label" id="stateLabel">Waiting for the camera</div>
+      <p class="state-caption" id="stateCaption">Start a reading to let the page look at your eyes.</p>
+      <div class="cal" id="calBar" hidden><div class="cal-fill" id="calFill"></div></div>
+      <p class="status" id="status" hidden></p>
+    </div>
+
+    <div class="actions">
+      <button id="startBtn" class="btn primary" type="button">Start reading</button>
+      <button id="previewBtn" class="btn" type="button">Show camera</button>
+      <button id="recalBtn" class="btn" type="button" disabled>Reset baseline</button>
+    </div>
+
+    <div class="preview" id="preview" hidden>
+      <video id="cam" playsinline muted autoplay></video>
+      <canvas id="overlay" aria-hidden="true"></canvas>
+    </div>
+
+    <dl class="metrics">
+      <div><dt>PERCLOS</dt><dd id="mPerclos">—</dd></div>
+      <div><dt>Blink rate</dt><dd id="mBlinkRate">—</dd></div>
+      <div><dt>Blink duration</dt><dd id="mBlinkDur">—</dd></div>
+      <div><dt>Lids at rest</dt><dd id="mRest">—</dd></div>
+      <div><dt>Gaze jitter</dt><dd id="mGaze">—</dd></div>
+      <div><dt>Face time</dt><dd id="mFace">—</dd></div>
+    </dl>
+
+    <p class="delta" id="delta">First reading on this device.</p>
+
+    <div class="history">
+      <div class="history-head">
+        <span class="history-label">Sky map — past readings</span>
+        <button id="clearBtn" class="link" type="button">Clear</button>
+      </div>
+      <div class="history-strip" id="historyStrip"></div>
+    </div>
+  </main>
+
+  <section class="notes">
+    <h2>What it measures</h2>
+    <dl class="glossary">
+      <div><dt>PERCLOS</dt><dd>Share of the last minute the eyes were at least 80% closed. The one signal here with real drowsiness-detection research behind it, so it carries most of the score.</dd></div>
+      <div><dt>Blink duration</dt><dd>Mean length of recent blinks. Alert blinks are quick; they stretch past 300 ms as drowsiness sets in.</dd></div>
+      <div><dt>Lids at rest</dt><dd>How far the lids sit closed between blinks, relative to your own calibrated open-eye baseline from the first eight seconds.</dd></div>
+      <div><dt>Blink rate</dt><dd>Blinks per minute. Very low rates go with screen fixation; very high rates with fatigue and irritation.</dd></div>
+      <div><dt>Gaze jitter</dt><dd>How much the irises drift over two seconds while you look at the screen — a rough stand-in for fixation stability.</dd></div>
+    </dl>
+    <p class="fine-print">
+      Frames are processed on this device by MediaPipe's face landmarker running in your browser.
+      No video is recorded or uploaded; only the numbers above are kept, in this browser's local
+      storage, so the next reading can show what changed. This is an experiment, not a diagnostic
+      instrument — eyelid behaviour is an indirect, noisy proxy for how tired you are, and none of
+      this is medical guidance.
+    </p>
+  </section>
+
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
