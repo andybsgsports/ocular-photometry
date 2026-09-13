@@ -260,6 +260,47 @@ h2 {
 }
 .preview video { display: block; }
 
+.onboard {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 6, 9, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 20;
+}
+.onboard[hidden] { display: none; }
+.onboard-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 30px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.onboard-eyebrow {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--phosphor);
+}
+.onboard-card h2 { margin: 0; font-size: 1.3rem; }
+.onboard-body { margin: 0; font-size: .95rem; line-height: 1.55; color: var(--paper-dim); }
+.onboard-timer {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 2.6rem;
+  color: var(--paper);
+}
+.onboard-skip { margin-top: 4px; }
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

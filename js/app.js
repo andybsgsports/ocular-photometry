@@ -14,6 +14,8 @@ const els = {
   mPerclos: $('mPerclos'), mBlinkRate: $('mBlinkRate'), mBlinkDur: $('mBlinkDur'),
   mRest: $('mRest'), mGaze: $('mGaze'), mFace: $('mFace'),
   delta: $('delta'), history: $('historyStrip'),
+  onboard: $('onboard'), onboardEyebrow: $('onboardEyebrow'), onboardTitle: $('onboardTitle'),
+  onboardBody: $('onboardBody'), onboardTimer: $('onboardTimer'), onboardSkip: $('onboardSkip'),
 };
 
 const COPY = {
@@ -32,6 +34,25 @@ const COPY = {
 const SAVE_EVERY_MS = 30_000;
 const FACE_LOST_MS = 1_200;
 
+const ONBOARD_KEY = 'ocular.onboarded.v1';
+const ONBOARD_STEPS = {
+  calibrating: {
+    eyebrow: 'Calibrating',
+    title: 'Learning your baseline',
+    body: 'Look at the camera the way you normally would for the next few seconds. This learns what "eyes open" looks like for you, so glasses or naturally heavy lids aren’t mistaken for fatigue.',
+  },
+  prompt: {
+    eyebrow: 'Try it',
+    title: 'Close your eyes now',
+    body: 'Gently close your eyes and hold them shut until this reaches zero.',
+  },
+  result: {
+    eyebrow: 'That’s the reading responding',
+    title: 'Open again to recover',
+    body: 'Closed eyes pull the sky toward its core; open, alert eyes bring it back. Explore freely — Reset baseline recalibrates any time.',
+  },
+};
+
 const session = Date.now();
 const metrics = new EyeMetrics();
 const eyeScale = parseFloat(getComputedStyle(els.eyeShell).getPropertyValue('--eye-scale')) || 1;
@@ -47,6 +68,63 @@ let lastUiAt = 0;
 let lastSaveAt = 0;
 let lastVideoTime = -1;
 let latestSnapshot = null;
+let onboardSeen = localStorage.getItem(ONBOARD_KEY) === '1';
+let onboardActive = false;
+let onboardHandle = null;
+
+function showOnboardStep(key) {
+  const step = ONBOARD_STEPS[key];
+  els.onboardEyebrow.textContent = step.eyebrow;
+  els.onboardTitle.textContent = step.title;
+  els.onboardBody.textContent = step.body;
+  els.onboard.hidden = false;
+}
+
+function onboardCountdown(seconds, { visible, onDone }) {
+  clearInterval(onboardHandle);
+  let remaining = seconds;
+  els.onboardTimer.hidden = !visible;
+  if (visible) els.onboardTimer.textContent = String(remaining);
+  onboardHandle = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      clearInterval(onboardHandle);
+      onboardHandle = null;
+      onDone();
+    } else if (visible) {
+      els.onboardTimer.textContent = String(remaining);
+    }
+  }, 1000);
+}
+
+function beginOnboarding() {
+  if (onboardSeen) return;
+  localStorage.setItem(ONBOARD_KEY, '1');
+  onboardSeen = true;
+  onboardActive = true;
+  showOnboardStep('calibrating');
+}
+
+function continueOnboarding() {
+  if (!onboardActive) return;
+  onboardActive = false;
+  showOnboardStep('prompt');
+  onboardCountdown(6, {
+    visible: true,
+    onDone: () => {
+      showOnboardStep('result');
+      onboardCountdown(4, { visible: false, onDone: endOnboarding });
+    },
+  });
+}
+
+function endOnboarding() {
+  clearInterval(onboardHandle);
+  onboardHandle = null;
+  onboardActive = false;
+  els.onboard.hidden = true;
+  els.onboardTimer.hidden = true;
+}
 
 function setCopy(key, detail) {
   const [label, caption] = COPY[key];
@@ -65,6 +143,7 @@ function setPhase(next) {
     setCopy(next === STATES.CALIBRATING ? STATES.CALIBRATING : next);
     if (next !== STATES.CALIBRATING) els.energyNum.textContent = '—';
   }
+  if (next === STATES.CALIBRATING) beginOnboarding();
   if (next === 'idle' || next === 'no-face' || next === 'error' || next === 'loading') {
     nebula.setTarget({ energy: null, state: 'idle' });
   }
@@ -119,6 +198,7 @@ async function start() {
 
 function stop() {
   running = false;
+  endOnboarding();
   saveReading(true);
   stream?.getTracks().forEach((t) => t.stop());
   stream = null;
@@ -163,7 +243,10 @@ function render(t) {
     els.calFill.style.width = `${Math.round(s.calibrationProgress * 100)}%`;
     return;
   }
-  if (phase !== 'reading') setPhase('reading');
+  if (phase !== 'reading') {
+    setPhase('reading');
+    continueOnboarding();
+  }
 
   els.energyNum.textContent = String(s.energy);
   setCopy(s.state);
@@ -294,6 +377,7 @@ els.recalBtn.addEventListener('click', () => {
   latestSnapshot = null;
   if (running) setPhase(STATES.CALIBRATING);
 });
+els.onboardSkip.addEventListener('click', endOnboarding);
 els.clearBtn.addEventListener('click', () => {
   clearReadings();
   renderHistory();
