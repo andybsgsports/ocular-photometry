@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="What Ocular Photometry records, where it lives, and who can see it.">
+  <title>Ocular Photometry — Privacy</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; connect-src 'none'; img-src 'self'; style-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="sheet">
+
+  <header class="head">
+    <div class="kicker"><a class="crumb" href="./">Ocular Photometry</a> — privacy</div>
+    <h1>What this page records</h1>
+    <p class="lede">
+      The short version: your camera is read by code running inside this browser tab, nothing
+      is uploaded, and the only thing kept is a few numbers per session in this browser's own
+      storage. The long version follows, written to be checked against the
+      <a href="https://github.com/andybsgsports/ocular-photometry">public source code</a>.
+    </p>
+  </header>
+
+  <section class="notes">
+    <h2>Camera frames</h2>
+    <dl class="glossary">
+      <div><dt>Used for</dt><dd>Finding the eyes and measuring how open the lids are, once per video frame, with MediaPipe's face landmarker running as WebAssembly in your browser.</dd></div>
+      <div><dt>Stored</dt><dd>Never. Frames pass from the camera to the model in memory and are discarded. No image, video, landmark set, or face template is written anywhere.</dd></div>
+      <div><dt>Sent anywhere</dt><dd>Never. There is no server behind this page, no analytics, no cookies, and no account.</dd></div>
+      <div><dt>Access</dt><dd>Only after you press <em>Start reading</em> and accept the browser's own camera prompt. Video only, front camera. <em>Stop</em> releases the camera.</dd></div>
+    </dl>
+
+    <h2>The reading that is kept</h2>
+    <p class="lede">
+      When a session has calibrated, one record is saved in this browser's <code>localStorage</code>
+      and updated every 30 seconds, so the next visit can show what changed. It looks like this:
+    </p>
+    <pre class="record"><code>{
+  "session": 1789277388202,
+  "t": 1789277414525,
+  "energy": 100,
+  "state": "replenished",
+  "perclos": 0,
+  "blinkRate": 0,
+  "blinkDurationMs": null,
+  "faceMs": 23080
+}</code></pre>
+    <dl class="glossary">
+      <div><dt>What it contains</dt><dd>Two timestamps, the energy score, its state label, and the eyelid numbers behind it. Nothing that identifies a person or a device.</dd></div>
+      <div><dt>How many</dt><dd>One per session, up to 96. Older ones are dropped.</dd></div>
+      <div><dt>Where it lives</dt><dd>Only in this browser on this device. It is not synced, backed up, or transmitted by this page.</dd></div>
+      <div><dt>How to delete it</dt><dd>Press <em>Clear</em> under the sky map, or clear this site's data in your browser settings.</dd></div>
+      <div><dt>Who else could read it</dt><dd>Any other page served from the same origin, <code>andybsgsports.github.io</code>, could read this browser's storage. Those are all sites published by the same account.</dd></div>
+    </dl>
+
+    <h2>Requests that leave your device</h2>
+    <p class="lede">
+      Everything the page needs — its own code, the MediaPipe runtime and model, and the
+      typefaces — is served from this site, <code>andybsgsports.github.io</code>. No other host is
+      contacted, and a Content-Security-Policy on the page forbids the browser from connecting
+      anywhere else even if a script tried to.
+    </p>
+    <dl class="glossary">
+      <div><dt>andybsgsports.github.io</dt><dd>GitHub Pages serves the files and, like any web host, sees ordinary request logs: your IP address, browser type, and the file names fetched. Nothing from the camera is ever part of a request.</dd></div>
+    </dl>
+
+    <h2>What this is not</h2>
+    <p class="fine-print">
+      This is not a medical device and not a biometric identification system. It does not
+      recognise who you are, and its numbers are an indirect, noisy proxy for tiredness that
+      should not guide health decisions. The behaviour described here is the behaviour of the
+      code in the linked repository at the time of writing; if that code changes, this page
+      changes with it.
+    </p>
+    <p class="fine-print">Last reviewed September 2026 · <a href="./">Back to the reading</a></p>
+  </section>
+
+</div>
+</body>
+</html>

@@ -11,9 +11,9 @@ since the last time you looked.
 
 ## How it works
 
-1. **Camera → face landmarks.** MediaPipe's Face Landmarker (loaded from jsDelivr, model from
-   Google's public bucket) runs on each video frame and returns 478 landmarks plus face
-   blendshapes. The `eyeBlinkLeft` / `eyeBlinkRight` blendshapes give eyelid closure directly;
+1. **Camera → face landmarks.** MediaPipe's Face Landmarker (runtime and model served from
+   this site, see `vendor/mediapipe/`) runs on each video frame and returns 478 landmarks plus
+   face blendshapes. The `eyeBlinkLeft` / `eyeBlinkRight` blendshapes give eyelid closure directly;
    iris landmarks give gaze position.
 2. **Closure → signals** (`js/metrics.js`, pure, unit-tested):
    - **Calibration** — the median closure over the first 8 s of face time becomes the
@@ -60,6 +60,19 @@ Unit tests (Node 20+):
 ```sh
 npm test
 ```
+
+## Privacy and security
+
+[`privacy.html`](privacy.html) is the plain-language record of what the page keeps (one small
+numeric reading per session, in the browser's local storage) and what it never stores (frames,
+landmarks, anything identifying).
+
+- **No third-party code at runtime.** The MediaPipe runtime, the model, and the fonts are all
+  served from this repository (`vendor/`), so no CDN sees a request and no CDN can inject code.
+- **Content-Security-Policy** on every page restricts scripts, connections, fonts, and styles
+  to the page's own origin; WebAssembly is allowed via `'wasm-unsafe-eval'` only.
+- **Nothing is transmitted.** There is no server, no analytics, no cookies, no accounts.
+- **Camera access** is video-only, gated by the browser's own prompt, and released on Stop.
 
 ## Limits
 
