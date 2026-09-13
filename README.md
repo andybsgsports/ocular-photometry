@@ -31,6 +31,17 @@ since the last time you looked.
    horizon, palette — are interpolated between keyframes at 100 / 62 / 37 / 12 / 0, so the
    nebula thins, dims, and finally collapses into a ringed black hole.
 
+Two things help the input signal stay honest:
+
+- **Lighting check.** Average frame brightness is sampled continuously; a "Low" or "Bright"
+  reading during calibration is called out in the caption, since bad lighting is the largest
+  practical source of a bad reading in an ordinary RGB webcam.
+- **Camera picker.** If a device exposes more than one camera — most visibly a Windows Hello
+  infrared camera alongside the regular webcam — a picker lets you choose it. `getUserMedia`
+  never reaches the actual biometric IR sensor behind Face ID or similar unlock systems (that
+  is walled off from web pages entirely); this only helps on the rarer devices where an IR
+  webcam is exposed as an ordinary camera device.
+
 ## Layout
 
 ```
