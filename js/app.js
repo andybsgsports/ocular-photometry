@@ -12,10 +12,11 @@ const els = {
   startBtn: $('startBtn'), previewBtn: $('previewBtn'), recalBtn: $('recalBtn'), clearBtn: $('clearBtn'),
   preview: $('preview'), cam: $('cam'), overlay: $('overlay'),
   mPerclos: $('mPerclos'), mBlinkRate: $('mBlinkRate'), mBlinkDur: $('mBlinkDur'),
-  mRest: $('mRest'), mGaze: $('mGaze'), mFace: $('mFace'),
+  mRest: $('mRest'), mGaze: $('mGaze'), mFace: $('mFace'), mLight: $('mLight'),
   delta: $('delta'), history: $('historyStrip'),
   onboard: $('onboard'), onboardEyebrow: $('onboardEyebrow'), onboardTitle: $('onboardTitle'),
   onboardBody: $('onboardBody'), onboardTimer: $('onboardTimer'), onboardSkip: $('onboardSkip'),
+  cameraPicker: $('cameraPicker'), cameraSelect: $('cameraSelect'),
 };
 
 const COPY = {
@@ -33,6 +34,9 @@ const COPY = {
 
 const SAVE_EVERY_MS = 30_000;
 const FACE_LOST_MS = 1_200;
+const CAMERA_KEY = 'ocular.cameraId';
+const LIGHT_DARK = 55;
+const LIGHT_BRIGHT = 225;
 
 const ONBOARD_KEY = 'ocular.onboarded.v1';
 const ONBOARD_STEPS = {
@@ -71,6 +75,86 @@ let latestSnapshot = null;
 let onboardSeen = localStorage.getItem(ONBOARD_KEY) === '1';
 let onboardActive = false;
 let onboardHandle = null;
+let lightingEma = null;
+
+const lightCanvas = document.createElement('canvas');
+lightCanvas.width = 12;
+lightCanvas.height = 9;
+const lightCtx = lightCanvas.getContext('2d', { willReadFrequently: true });
+
+function sampleLuminance(video) {
+  lightCtx.drawImage(video, 0, 0, lightCanvas.width, lightCanvas.height);
+  const { data } = lightCtx.getImageData(0, 0, lightCanvas.width, lightCanvas.height);
+  let sum = 0;
+  for (let i = 0; i < data.length; i += 4) sum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+  return sum / (data.length / 4);
+}
+
+function updateLighting() {
+  if (!els.cam.videoWidth) return;
+  const lum = sampleLuminance(els.cam);
+  lightingEma = lightingEma == null ? lum : lightingEma + (lum - lightingEma) * 0.25;
+}
+
+function lightingLabel() {
+  if (lightingEma == null) return null;
+  if (lightingEma < LIGHT_DARK) return 'Low';
+  if (lightingEma > LIGHT_BRIGHT) return 'Bright';
+  return 'Good';
+}
+
+function labelForCamera(device, index) {
+  const raw = device.label || `Camera ${index + 1}`;
+  return /infrared|\bir\b|windows hello/i.test(raw) ? `${raw} (IR — steadier in low light)` : raw;
+}
+
+async function refreshCameraList(selectedId) {
+  let devices;
+  try {
+    devices = await navigator.mediaDevices.enumerateDevices();
+  } catch {
+    return;
+  }
+  const cams = devices.filter((d) => d.kind === 'videoinput');
+  if (cams.length < 2) {
+    els.cameraPicker.hidden = true;
+    return;
+  }
+  els.cameraSelect.replaceChildren(...cams.map((d, i) => {
+    const opt = document.createElement('option');
+    opt.value = d.deviceId;
+    opt.textContent = labelForCamera(d, i);
+    return opt;
+  }));
+  els.cameraSelect.selectedIndex = selectedId ? cams.findIndex((d) => d.deviceId === selectedId) : -1;
+  if (els.cameraSelect.selectedIndex < 0) els.cameraSelect.selectedIndex = 0;
+  els.cameraPicker.hidden = false;
+}
+
+async function switchCamera(deviceId) {
+  if (!running) return;
+  status('Switching camera…');
+  stream?.getTracks().forEach((t) => t.stop());
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { deviceId: { exact: deviceId }, width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false,
+    });
+  } catch (err) {
+    console.error(err);
+    status(null);
+    return;
+  }
+  els.cam.srcObject = stream;
+  await els.cam.play();
+  lastVideoTime = -1;
+  lastFaceAt = 0;
+  lightingEma = null;
+  metrics.recalibrate();
+  latestSnapshot = null;
+  status(null);
+  setPhase('no-face');
+}
 
 function showOnboardStep(key) {
   const step = ONBOARD_STEPS[key];
@@ -173,15 +257,30 @@ async function start() {
     status('Loading vision runtime…');
     landmarker ??= await createLandmarker({ onStage: status });
     status('Requesting camera…');
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-      audio: false,
-    });
+    const savedCameraId = localStorage.getItem(CAMERA_KEY);
+    const wantDevice = savedCameraId ? { deviceId: { exact: savedCameraId } } : { facingMode: 'user' };
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { ...wantDevice, width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: false,
+      });
+    } catch (err) {
+      if (savedCameraId && err.name === 'OverconstrainedError') {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: false,
+        });
+      } else {
+        throw err;
+      }
+    }
     els.cam.srcObject = stream;
     await els.cam.play();
     running = true;
     lastVideoTime = -1;
+    lightingEma = null;
     status(null);
+    await refreshCameraList(stream.getVideoTracks()[0]?.getSettings().deviceId);
     setPhase('no-face');
     els.startBtn.textContent = 'Stop';
     requestAnimationFrame(loop);
@@ -225,6 +324,7 @@ function loop() {
     }
     if (t - lastUiAt > 150) {
       lastUiAt = t;
+      updateLighting();
       render(t);
     }
   }
@@ -232,6 +332,10 @@ function loop() {
 }
 
 function render(t) {
+  const light = lightingLabel();
+  els.mLight.textContent = light ?? '—';
+  els.mLight.classList.toggle('warn', light === 'Low' || light === 'Bright');
+
   if (t - lastFaceAt > FACE_LOST_MS) {
     if (phase !== 'no-face') setPhase('no-face');
     return;
@@ -241,6 +345,9 @@ function render(t) {
   if (!s.calibrated) {
     if (phase !== STATES.CALIBRATING) setPhase(STATES.CALIBRATING);
     els.calFill.style.width = `${Math.round(s.calibrationProgress * 100)}%`;
+    setCopy(STATES.CALIBRATING, light && light !== 'Good'
+      ? `${COPY[STATES.CALIBRATING][1]} Lighting looks ${light.toLowerCase()} — try a brighter, even light.`
+      : undefined);
     return;
   }
   if (phase !== 'reading') {
@@ -378,6 +485,14 @@ els.recalBtn.addEventListener('click', () => {
   if (running) setPhase(STATES.CALIBRATING);
 });
 els.onboardSkip.addEventListener('click', endOnboarding);
+els.cameraSelect.addEventListener('change', () => {
+  const id = els.cameraSelect.value;
+  localStorage.setItem(CAMERA_KEY, id);
+  switchCamera(id);
+});
+navigator.mediaDevices?.addEventListener?.('devicechange', () => {
+  if (running) refreshCameraList(stream?.getVideoTracks()[0]?.getSettings().deviceId);
+});
 els.clearBtn.addEventListener('click', () => {
   clearReadings();
   renderHistory();

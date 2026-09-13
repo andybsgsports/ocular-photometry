@@ -61,6 +61,11 @@
       <button id="recalBtn" class="btn" type="button" disabled>Reset baseline</button>
     </div>
 
+    <label class="camera-picker" id="cameraPicker" hidden>
+      Camera
+      <select id="cameraSelect"></select>
+    </label>
+
     <div class="preview" id="preview" hidden>
       <video id="cam" playsinline muted autoplay></video>
       <canvas id="overlay" aria-hidden="true"></canvas>
@@ -83,6 +88,7 @@
       <div><dt>Lids at rest</dt><dd id="mRest">—</dd></div>
       <div><dt>Gaze jitter</dt><dd id="mGaze">—</dd></div>
       <div><dt>Face time</dt><dd id="mFace">—</dd></div>
+      <div><dt>Lighting</dt><dd id="mLight">—</dd></div>
     </dl>
 
     <p class="delta" id="delta">First reading on this device.</p>
@@ -104,6 +110,7 @@
       <div><dt>Lids at rest</dt><dd>How far the lids sit closed between blinks, relative to your own calibrated open-eye baseline from the first eight seconds.</dd></div>
       <div><dt>Blink rate</dt><dd>Blinks per minute. Very low rates go with screen fixation; very high rates with fatigue and irritation.</dd></div>
       <div><dt>Gaze jitter</dt><dd>How much the irises drift over two seconds while you look at the screen — a rough stand-in for fixation stability.</dd></div>
+      <div><dt>Lighting</dt><dd>Average brightness of the frame. Too dark or too backlit is the single biggest cause of a bad reading in an ordinary webcam, so it is called out directly.</dd></div>
     </dl>
     <p class="fine-print">
       Frames are processed on this device by MediaPipe's face landmarker running in your browser.

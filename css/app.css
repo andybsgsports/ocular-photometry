@@ -242,6 +242,32 @@ h2 {
 .link:hover { color: var(--paper); }
 .link:focus-visible { outline: 2px solid var(--phosphor); outline-offset: 2px; }
 
+.camera-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+.camera-picker select {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: normal;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--paper);
+  padding: 6px 8px;
+  max-width: 220px;
+}
+.camera-picker select:focus-visible { outline: 2px solid var(--phosphor); outline-offset: 2px; }
+
+.metrics dd.warn { color: var(--halpha); }
+
 .preview {
   position: relative;
   width: min(100%, 320px);
